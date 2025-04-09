@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindful Multitasking Guard</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6b8cae;
+            --warning: #e67e22;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --neutral: #f5f5f5;
+            --border: #e0e0e0;
+            --text: #333333;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .module {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .module-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .module-title h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .settings-btn {
+            background: var(--neutral);
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .settings-btn:hover {
+            background: #e8e8e8;
+        }
+        
+        .settings-panel {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .settings-panel.active {
+            display: block;
+        }
+        
+        .setting-item {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+        
+        .status-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .indicator {
+            background: var(--neutral);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .indicator-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .indicator-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .alert-box {
+            background: var(--warning);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .alert-box.visible {
+            display: flex;
+        }
+        
+        .alert-box.high-severity {
+            background: var(--danger);
+        }
+        
+        .alert-message {
+            margin-right: 10px;
+        }
+        
+        .dismiss-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .dismiss-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .stats-module {
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .insights {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 5px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mindful Multitasking Guard - Designed by Prof. Rahul M. Samant</h1>
+        </header>
+        
+        <!-- Alert Module -->
+        <div class="module">
+            <div class="alert-box" id="alert-box">
+                <div class="alert-message" id="alert-message">
+                    You've switched tabs 5 times in the last 3 minutes. Consider focusing on one task.
+                </div>
+                <button class="dismiss-btn" id="dismiss-alert">Dismiss</button>
+            </div>
+        </div>
+        
+        <!-- Status Module -->
+        <div class="module">
+            <div class="module-title">
+                <h2>Focus Status</h2>
+                <button class="settings-btn" id="status-settings-btn">
+                    <span>Settings</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="settings-panel" id="status-settings-panel">
+                <div class="setting-row">
+                    <span>Activate Window/Tab Switching Detection</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="tab-switch-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Activate Inactivity Detection</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="inactivity-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="tab-switch-threshold">Tab Switch Alert Threshold (times in period)</label>
+                    <input type="number" id="tab-switch-threshold" value="5" min="1">
+                </div>
+                <div class="setting-item">
+                    <label for="inactivity-threshold">Inactivity Alert Threshold (seconds)</label>
+                    <input type="number" id="inactivity-threshold" value="120" min="10">
+                </div>
+                <div class="setting-item">
+                    <label for="monitoring-period">Monitoring Period (minutes)</label>
+                    <input type="number" id="monitoring-period" value="3" min="1">
+                </div>
+            </div>
+            
+            <div class="status-indicators">
+                <div class="indicator">
+                    <div class="indicator-label">Tab Switches</div>
+                    <div class="indicator-value" id="tab-switch-count">0</div>
+                    <div class="indicator-label">in last <span id="period-display">3</span> min</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-label">Current Session</div>
+                    <div class="indicator-value" id="session-duration">00:00</div>
+                    <div class="indicator-label">without switching</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-label">Inactive Time</div>
+                    <div class="indicator-value" id="inactive-time">0s</div>
+                    <div class="indicator-label">since last activity</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Module -->
+        <div class="module stats-module">
+            <div class="module-title">
+                <h2>Focus Analytics</h2>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Focus Score</div>
+                    <div class="stat-value" id="focus-score">85%</div>
+                    <div class="stat-label">Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Session Length</div>
+                    <div class="stat-value" id="avg-session">4:25</div>
+                    <div class="stat-label">minutes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Longest Focus</div>
+                    <div class="stat-value" id="longest-focus">17:30</div>
+                    <div class="stat-label">minutes</div>
+                </div>
+            </div>
+            
+            <div class="insights">
+                <p><strong>Insight:</strong> <span id="insight-text">Your focus patterns show improvement compared to yesterday. Keep it up!</span></p>
+            </div>
+        </div>
+        
+        <footer>
+            Mindful Multitasking Guard v1.0 | Created by Prof. Rahul M. Samant.
+        </footer>
+    </div>
+
+    <script>
+        // Configuration & State Management
+        const config = {
+            tabSwitchThreshold: 5,
+            inactivityThreshold: 120, // seconds
+            monitoringPeriod: 3, // minutes
+            tabSwitchDetectionEnabled: true,
+            inactivityDetectionEnabled: true
+        };
+        
+        const state = {
+            tabSwitches: [],
+            lastActive: Date.now(),
+            currentSessionStart: Date.now(),
+            focusScore: 85,
+            avgSessionLength: 265, // in seconds
+            longestFocus: 1050, // in seconds
+            isHidden: false
+        };
+        
+        // DOM Elements
+        const elements = {
+            alertBox: document.getElementById('alert-box'),
+            alertMessage: document.getElementById('alert-message'),
+            dismissAlert: document.getElementById('dismiss-alert'),
+            statusSettingsBtn: document.getElementById('status-settings-btn'),
+            statusSettingsPanel: document.getElementById('status-settings-panel'),
+            tabSwitchToggle: document.getElementById('tab-switch-toggle'),
+            inactivityToggle: document.getElementById('inactivity-toggle'),
+            tabSwitchThreshold: document.getElementById('tab-switch-threshold'),
+            inactivityThreshold: document.getElementById('inactivity-threshold'),
+            monitoringPeriod: document.getElementById('monitoring-period'),
+            tabSwitchCount: document.getElementById('tab-switch-count'),
+            sessionDuration: document.getElementById('session-duration'),
+            inactiveTime: document.getElementById('inactive-time'),
+            periodDisplay: document.getElementById('period-display'),
+            focusScore: document.getElementById('focus-score'),
+            avgSession: document.getElementById('avg-session'),
+            longestFocus: document.getElementById('longest-focus'),
+            insightText: document.getElementById('insight-text')
+        };
+        
+        // Format time in MM:SS or HH:MM format
+        function formatTime(seconds) {
+            if (seconds < 3600) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                return `${hours}:${minutes.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // Update UI elements with current state
+        function updateUI() {
+            // Filter tab switches within monitoring period
+            const cutoff = Date.now() - (config.monitoringPeriod * 60 * 1000);
+            const recentSwitches = state.tabSwitches.filter(time => time > cutoff);
+            
+            // Update indicators
+            elements.tabSwitchCount.textContent = recentSwitches.length;
+            elements.periodDisplay.textContent = config.monitoringPeriod;
+            
+            // Update session duration
+            const sessionDuration = (Date.now() - state.currentSessionStart) / 1000;
+            elements.sessionDuration.textContent = formatTime(sessionDuration);
+            
+            // Update stats
+            elements.focusScore.textContent = `${state.focusScore}%`;
+            elements.avgSession.textContent = formatTime(state.avgSessionLength);
+            elements.longestFocus.textContent = formatTime(state.longestFocus);
+            
+            // Check for alerts
+            if (recentSwitches.length >= config.tabSwitchThreshold && config.tabSwitchDetectionEnabled) {
+                showAlert(`You've switched tabs ${recentSwitches.length} times in the last ${config.monitoringPeriod} minutes. Consider focusing on one task.`);
+            }
+        }
+        
+        // Update inactive time
+        function updateInactiveTime() {
+            if (config.inactivityDetectionEnabled) {
+                const inactiveSeconds = Math.floor((Date.now() - state.lastActive) / 1000);
+                
+                if (inactiveSeconds < 60) {
+                    elements.inactiveTime.textContent = `${inactiveSeconds}s`;
+                } else {
+                    const minutes = Math.floor(inactiveSeconds / 60);
+                    const seconds = inactiveSeconds % 60;
+                    elements.inactiveTime.textContent = `${minutes}m ${seconds}s`;
+                }
+                
+                // Check for inactivity alert
+                if (inactiveSeconds >= config.inactivityThreshold) {
+                    showAlert(`You've been inactive for ${formatTime(inactiveSeconds)}. Ready to continue?`, 'high-severity');
+                }
+            }
+        }
+        
+        // Show alert message
+        function showAlert(message, severity = '') {
+            elements.alertMessage.textContent = message;
+            elements.alertBox.className = `alert-box visible ${severity}`;
+        }
+        
+        // Hide alert message
+        function hideAlert() {
+            elements.alertBox.className = 'alert-box';
+        }
+        
+        // Record tab switch
+        function recordTabSwitch() {
+            if (config.tabSwitchDetectionEnabled) {
+                state.tabSwitches.push(Date.now());
+                state.currentSessionStart = Date.now();
+                updateUI();
+            }
+        }
+        
+        // Reset activity timer
+        function resetActivityTimer() {
+            state.lastActive = Date.now();
+        }
+        
+        // Toggle settings panel
+        function toggleSettingsPanel() {
+            elements.statusSettingsPanel.classList.toggle('active');
+        }
+        
+        // Save settings
+        function saveSettings() {
+            config.tabSwitchThreshold = parseInt(elements.tabSwitchThreshold.value) || 5;
+            config.inactivityThreshold = parseInt(elements.inactivityThreshold.value) || 120;
+            config.monitoringPeriod = parseInt(elements.monitoringPeriod.value) || 3;
+            config.tabSwitchDetectionEnabled = elements.tabSwitchToggle.checked;
+            config.inactivityDetectionEnabled = elements.inactivityToggle.checked;
+            
+            updateUI();
+        }
+        
+        // Event Listeners
+        elements.dismissAlert.addEventListener('click', hideAlert);
+        elements.statusSettingsBtn.addEventListener('click', toggleSettingsPanel);
+        
+        // Settings change listeners
+        elements.tabSwitchToggle.addEventListener('change', saveSettings);
+        elements.inactivityToggle.addEventListener('change', saveSettings);
+        elements.tabSwitchThreshold.addEventListener('change', saveSettings);
+        elements.inactivityThreshold.addEventListener('change', saveSettings);
+        elements.monitoringPeriod.addEventListener('change', saveSettings);
+        
+        // Visibility change detection
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                state.isHidden = true;
+            } else if (state.isHidden) {
+                state.isHidden = false;
+                recordTabSwitch();
+            }
+        });
+        
+        // Activity detection
+        document.addEventListener('mousemove', resetActivityTimer);
+        document.addEventListener('keydown', resetActivityTimer);
+        document.addEventListener('click', resetActivityTimer);
+        
+        // Initialize UI
+        updateUI();
+        
+        // Start update intervals
+        setInterval(updateUI, 10000); // Update UI every 10 seconds
+        setInterval(updateInactiveTime, 1000); // Update inactive time every second
+        
+        // Simulate some initial data
+        // This would be replaced with actual usage data in a real implementation
+        const insights = [
+            "Your focus patterns show improvement compared to yesterday. Keep it up!",
+            "You tend to multitask more in the afternoons. Consider scheduling focused work in the mornings.",
+            "Today's focus score is above your weekly average!",
+            "Your longest focus session today was significantly better than your usual average.",
+            "Consider taking a short break to improve your ability to focus."
+        ];
+        
+        // Set a random insight
+        elements.insightText.textContent = insights[Math.floor(Math.random() * insights.length)];
+    </script>
+</body>
+</html>
